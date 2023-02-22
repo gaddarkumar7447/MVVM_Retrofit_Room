@@ -29,12 +29,10 @@ class MemeAdapter(private val context: Context, private val list: List<MemeX>) :
         holder.nameT.text = "NAME : ${currentItem.name}"
         holder.width1.text = "Width : ${currentItem.width}"
         holder.height.text = "Height : ${currentItem.height}"
-        holder.cons.text = "Conse: ${currentItem.captions}"
+        holder.cons.text = "Cons: ${currentItem.captions}"
         holder.box.text = "BOX : ${currentItem.box_count}"
 
         Glide.with(context).load(currentItem.url).into(holder.image)
-
-
     }
 
     override fun getItemCount(): Int {
