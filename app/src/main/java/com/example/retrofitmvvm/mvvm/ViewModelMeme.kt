@@ -18,5 +18,4 @@ class ViewModelMeme(private val memesRepository : MemesRepository) : ViewModel()
     val memes : LiveData<Meme>
     get() = memesRepository.meme
 
-
 }
