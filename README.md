@@ -1,4 +1,4 @@
-# MVVM_Retrofit_RoomDatabase
+# MVVM Retrofit RoomDatabase
 
 This is an Android Application based on MVVM Architecture using retrofit for shoing RestApis data and store data in local DB.
 
