@@ -18,17 +18,16 @@ import com.android.volley.toolbox.Volley
 import com.example.retrofitmvvm.adapter.MemeAdapter
 import com.example.retrofitmvvm.api.ApiInterface
 import com.example.retrofitmvvm.api.ApiUtilities
+import com.example.retrofitmvvm.database.DatabaseDaoInterface
 import com.example.retrofitmvvm.database.DatabaseMemeAbstract
 import com.example.retrofitmvvm.meemmodel.Data
+import com.example.retrofitmvvm.meemmodel.Meme
 import com.example.retrofitmvvm.meemmodel.MemeX
 import com.example.retrofitmvvm.mvvm.MemesRepository
 import com.example.retrofitmvvm.mvvm.ViewModelFactoryMeme
 import com.example.retrofitmvvm.mvvm.ViewModelMeme
 import com.google.gson.JsonObject
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.MainScope
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
 import org.json.JSONArray
 
 
@@ -36,10 +35,10 @@ class MainActivity : AppCompatActivity() {
     private lateinit var databaseMeme : DatabaseMemeAbstract
     private lateinit var adapter: MemeAdapter
     private lateinit var memeX: MutableList<MemeX>
-
+    private lateinit var databaseDaoInterface: DatabaseDaoInterface
     private lateinit var viewModelMeme: ViewModelMeme
 
-    @SuppressLint("MissingInflatedId")
+    @SuppressLint("MissingInflatedId", "NotifyDataSetChanged")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -59,10 +58,10 @@ class MainActivity : AppCompatActivity() {
         memeX = mutableListOf<MemeX>(user)
 
 
-        val apiInterface = ApiUtilities.getIntence().create(ApiInterface::class.java)
+        //val apiInterface = ApiUtilities.getIntence().create(ApiInterface::class.java)
 
 
-        try {
+        /*try {
             databaseMeme = DatabaseMemeAbstract.getDatabase(applicationContext)
             MainScope().launch {
                 databaseMeme.getDataDao().insertMemeX(memeX)
@@ -75,7 +74,7 @@ class MainActivity : AppCompatActivity() {
         } catch (e: java.lang.Exception) {
             Toast.makeText(applicationContext, "Not creating instance", Toast.LENGTH_SHORT).show()
             Log.d("Instance", "$e")
-        }
+        }*/
 
         // Call only via retrofit
         /*CoroutineScope(Dispatchers.Main).launch {
@@ -88,12 +87,37 @@ class MainActivity : AppCompatActivity() {
         }*/
 
         // Call via mvvm pattern
-        val memesRepository = MemesRepository(apiInterface, applicationContext)
+        val apiInterface = ApiUtilities.getIntence().create(ApiInterface::class.java)
+        val databaseDaoInterface = DatabaseMemeAbstract.getDatabaseInstance(this).getDataDao()
+        val memesRepository = MemesRepository(apiInterface, databaseDaoInterface, this)
 
         //viewModelMeme = ViewModelMeme(memesRepository)
         viewModelMeme = ViewModelProvider(this, ViewModelFactoryMeme(memesRepository))[ViewModelMeme::class.java]
 
-        viewModelMeme.memes.observe(this, Observer {
+
+        //viewModelMeme.getData()
+        viewModelMeme.mutableLiveData.observe(this, Observer { it ->
+            it.apply {
+                Log.d("Check Data", this.toString())
+            }
+            adapter = MemeAdapter(this, it)
+
+        })
+        //adapter = MemeAdapter(this, memeX)
+
+        adapter = MemeAdapter(this, memeX)
+        recyclerView.layoutManager = LinearLayoutManager(this)
+        recyclerView.setHasFixedSize(true)
+        recyclerView.adapter = adapter
+        adapter.notifyDataSetChanged()
+
+
+
+
+
+        //adapter = MemeAdapter(this, memeX)
+
+        /*viewModelMeme.memes.observe(this, Observer {
             Log.d("Responce", "Res: ${it.data.memes[0]}")
             for (i in 0 until it.data.memes.size) {
                 val value = it.data.memes[i]
@@ -104,7 +128,7 @@ class MainActivity : AppCompatActivity() {
             recyclerView.layoutManager = LinearLayoutManager(this)
             recyclerView.setHasFixedSize(true)
             recyclerView.adapter = adapter
-        })
+        })*/
 
         Log.d("Responce", "Before: $memeX")
 

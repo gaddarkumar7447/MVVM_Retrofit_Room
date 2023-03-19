@@ -10,7 +10,10 @@ data class MemeX(
     val box_count: Int,
     val captions: Int,
     val height: Int,
-    @PrimaryKey val id: String,
+
+    @PrimaryKey
+    val id: String,
+
     val name: String,
     val url: String,
     val width: Int
