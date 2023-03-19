@@ -6,31 +6,32 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 import com.example.retrofitmvvm.meemmodel.MemeX
 
-@Database(entities = [MemeX::class], version = 1)
+@Database(entities = [MemeX::class], version = 1, exportSchema = false)
 abstract class DatabaseMemeAbstract : RoomDatabase(){
 
     abstract fun getDataDao() : DatabaseDaoInterface
 
     companion object{
         private var INSTANCE : DatabaseMemeAbstract ?= null
-        /*fun getDatabaseInstance(context: Context) : DatabaseMemeAbstract{
+        fun getDatabaseInstance(context: Context) : DatabaseMemeAbstract{
             synchronized(this){
                 if (INSTANCE == null){
-                    val  instance = Room.databaseBuilder(context, DatabaseMemeAbstract::class.java, "databaseDB").build()
+                    val  instance = Room.databaseBuilder(context, DatabaseMemeAbstract::class.java, "databaseDB.db").build()
                     INSTANCE = instance
                 }
             }
             return INSTANCE!!
-        }*/fun getDatabase(context: Context): DatabaseMemeAbstract {
+        }
+        /*fun getDatabase(context: Context): DatabaseMemeAbstract {
             return INSTANCE ?: synchronized(this) {
                 val instance = Room.databaseBuilder(
                     context.applicationContext,
                     DatabaseMemeAbstract::class.java,
-                    "databaseDB"
+                    "databaseDB.db"
                 ).build()
                 INSTANCE = instance
                 instance
             }
-        }
+        }*/
     }
 }
