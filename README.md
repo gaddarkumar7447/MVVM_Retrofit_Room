@@ -1,6 +1,6 @@
 # MVVM Retrofit RoomDatabase
 
-This is an Android Application based on MVVM Architecture using retrofit for shoing RestApis data and store data in local DB.
+This is an Android Application based on MVVM Architecture using retrofit for showing RestApis data and store data in local DB.
 
 
 # Built With
@@ -8,6 +8,9 @@ This is an Android Application based on MVVM Architecture using retrofit for sho
 + Retrofit (for API Calling).
 + Glide for image
 + Kotlin Coroutines.
++ Network Avaibility
++ Room Database
++ Sealed classes
 + Network Avaibility
 
 # Benefits of using MVVM Architecture
