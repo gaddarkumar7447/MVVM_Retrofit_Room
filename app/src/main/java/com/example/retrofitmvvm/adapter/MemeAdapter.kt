@@ -2,20 +2,17 @@ package com.example.retrofitmvvm.adapter
 
 import android.annotation.SuppressLint
 import android.content.Context
-import android.media.Image
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
-import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
-import androidx.recyclerview.widget.RecyclerView.ViewHolder
 import com.bumptech.glide.Glide
 import com.example.retrofitmvvm.R
-import com.example.retrofitmvvm.meemmodel.MemeX
+import com.example.retrofitmvvm.meemmodel.Meme
 
-class MemeAdapter(private val context: Context, private val list: List<MemeX>) : RecyclerView.Adapter<MemeAdapter.MemeViewHolder>() {
+class MemeAdapter(private val context: Context, private val list: List<Meme>) : RecyclerView.Adapter<MemeAdapter.MemeViewHolder>() {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): MemeViewHolder {
         return MemeViewHolder(LayoutInflater.from(context).inflate(R.layout.linear, parent, false))

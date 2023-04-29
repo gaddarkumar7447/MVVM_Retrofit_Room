@@ -4,38 +4,35 @@ import android.annotation.SuppressLint
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
+import android.view.View
+import android.widget.ProgressBar
 import android.widget.Toast
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
-import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import androidx.room.Room
-import com.android.volley.Request
-import com.android.volley.Response
-import com.android.volley.toolbox.StringRequest
-import com.android.volley.toolbox.Volley
+import com.example.retrofitmvvm.Utils.ApiResponce
+import com.example.retrofitmvvm.Utils.Utilities
+import com.example.retrofitmvvm.Utils.Utilities.isNetworkAvailable
 import com.example.retrofitmvvm.adapter.MemeAdapter
 import com.example.retrofitmvvm.api.ApiInterface
 import com.example.retrofitmvvm.api.ApiUtilities
 import com.example.retrofitmvvm.database.DatabaseDaoInterface
 import com.example.retrofitmvvm.database.DatabaseMemeAbstract
-import com.example.retrofitmvvm.meemmodel.Data
 import com.example.retrofitmvvm.meemmodel.Meme
-import com.example.retrofitmvvm.meemmodel.MemeX
+import com.example.retrofitmvvm.meemmodel.MemeResponce
 import com.example.retrofitmvvm.mvvm.MemesRepository
 import com.example.retrofitmvvm.mvvm.ViewModelFactoryMeme
 import com.example.retrofitmvvm.mvvm.ViewModelMeme
-import com.google.gson.JsonObject
-import kotlinx.coroutines.*
-import org.json.JSONArray
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.launch
+import kotlin.coroutines.CoroutineContext
 
 
 class MainActivity : AppCompatActivity() {
-    private lateinit var databaseMeme : DatabaseMemeAbstract
     private lateinit var adapter: MemeAdapter
-    private lateinit var memeX: MutableList<MemeX>
-    private lateinit var databaseDaoInterface: DatabaseDaoInterface
+    private lateinit var meme: List<Meme>
     private lateinit var viewModelMeme: ViewModelMeme
 
     @SuppressLint("MissingInflatedId", "NotifyDataSetChanged")
@@ -45,96 +42,72 @@ class MainActivity : AppCompatActivity() {
         supportActionBar?.hide()
 
         val recyclerView = findViewById<RecyclerView>(R.id.recyclerView)
+        val progressBar = findViewById<ProgressBar>(R.id.progress_circular)
 
-        val user = MemeX(
-            232,
-            324,
-            324,
-            "56667894",
-            "Gaddar kr Chaudhary",
-            "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSYKvuVZxelNRL_p7CMM-S88rYlvHZlH6X8JoA7X7NQBg&s",
-            323
-        )
-        memeX = mutableListOf<MemeX>(user)
+        meme = listOf()
+        adapter = MemeAdapter(this, meme)
 
-
-        //val apiInterface = ApiUtilities.getIntence().create(ApiInterface::class.java)
-
-
-        /*try {
-            databaseMeme = DatabaseMemeAbstract.getDatabase(applicationContext)
-            MainScope().launch {
-                databaseMeme.getDataDao().insertMemeX(memeX)
-            }
-
-            databaseMeme.getDataDao().getMemeFromDb().observe(this@MainActivity, Observer {
-                Log.d("DataOdDataBase", "$it")
-            })
-
-        } catch (e: java.lang.Exception) {
-            Toast.makeText(applicationContext, "Not creating instance", Toast.LENGTH_SHORT).show()
-            Log.d("Instance", "$e")
-        }*/
-
-        // Call only via retrofit
-        /*CoroutineScope(Dispatchers.Main).launch {
-            val data = apiInterface.getJokes().body()?.data?.memes?.get(0)
-            Log.d("Data1", "Data: $data")
-        }*/
-        /*val databaseMeme = DatabaseMeme.getDatabase(applicationContext)
-        MainScope().launch {
-            databaseMeme.getDataDao().insertMemeX(listOf(user))
-        }*/
-
-        // Call via mvvm pattern
         val apiInterface = ApiUtilities.getIntence().create(ApiInterface::class.java)
-        val databaseDaoInterface = DatabaseMemeAbstract.getDatabaseInstance(this).getDataDao()
-        val memesRepository = MemesRepository(apiInterface, databaseDaoInterface, this)
+        val databaseDaoInterface: DatabaseDaoInterface = DatabaseMemeAbstract.getDatabaseInstance(this).getDataDao()
+        val memesRepository = MemesRepository(apiInterface, databaseDaoInterface)
 
-        //viewModelMeme = ViewModelMeme(memesRepository)
-        viewModelMeme = ViewModelProvider(this, ViewModelFactoryMeme(memesRepository))[ViewModelMeme::class.java]
+        viewModelMeme = ViewModelProvider(this, ViewModelFactoryMeme(memesRepository, databaseDaoInterface))[ViewModelMeme::class.java]
 
-
-        //viewModelMeme.getData()
-        viewModelMeme.mutableLiveData.observe(this, Observer { it ->
-            it.apply {
-                Log.d("Check Data", this.toString())
+        viewModelMeme.getDataBase()
+        viewModelMeme.dataFromDataBaseMutable.observe(this, Observer {
+            it.forEach {
+                Log.d("MEME", it.toString())
             }
-            adapter = MemeAdapter(this, it)
-
         })
-        //adapter = MemeAdapter(this, memeX)
 
-        adapter = MemeAdapter(this, memeX)
-        recyclerView.layoutManager = LinearLayoutManager(this)
-        recyclerView.setHasFixedSize(true)
-        recyclerView.adapter = adapter
-        adapter.notifyDataSetChanged()
-
-
-
-
-
-        //adapter = MemeAdapter(this, memeX)
-
-        /*viewModelMeme.memes.observe(this, Observer {
-            Log.d("Responce", "Res: ${it.data.memes[0]}")
-            for (i in 0 until it.data.memes.size) {
-                val value = it.data.memes[i]
-                Log.d("Value: ", "$value")
-                memeX.addAll(listOf(value))
+        viewModelMeme.getMeme()
+        if (isNetworkAvailable(this)){
+            fetchDataFromApi(progressBar, recyclerView)
+        }else{
+            MainScope().launch {
+                recyclerView.layoutManager = LinearLayoutManager(this@MainActivity)
+                recyclerView.adapter = MemeAdapter(this@MainActivity, databaseDaoInterface.getMemeFromDb())
+                recyclerView.setHasFixedSize(true)
+                adapter.notifyDataSetChanged()
             }
-            adapter = MemeAdapter(this, memeX)
-            recyclerView.layoutManager = LinearLayoutManager(this)
-            recyclerView.setHasFixedSize(true)
-            recyclerView.adapter = adapter
-        })*/
+        }
 
-        Log.d("Responce", "Before: $memeX")
+    }
+
+    @SuppressLint("NotifyDataSetChanged")
+    private fun fetchDataFromApi(progressBar: ProgressBar, recyclerView: RecyclerView, ) {
+        viewModelMeme.memeLiveDataMeme.observe(this, Observer {
+            when (it) {
+                is ApiResponce.Loading -> {
+                    progressBar.visibility = View.VISIBLE
+                }
+                is ApiResponce.Successful -> {
+                    //meme = it.data?.data?.memes!!
+                    recyclerView.layoutManager = LinearLayoutManager(this)
+                    recyclerView.adapter = MemeAdapter(this, it.data?.data?.memes!!)
+                    recyclerView.setHasFixedSize(true)
+                    adapter.notifyDataSetChanged()
+                    progressBar.visibility = View.INVISIBLE
+                    //Log.d("MEME", it.data.data.memes.toString())
+
+                }
+                is ApiResponce.Error -> {
+                    Toast.makeText(this, it.message, Toast.LENGTH_SHORT).show()
+                    Log.d("MEME", it.message.toString())
+                    progressBar.visibility = View.INVISIBLE
+
+                }
+            }
+        })
+    }
+}
 
 
-        val url = "https://api.imgflip.com/get_memes"
-        /*val stringRequest = StringRequest(Request.Method.GET, url, { responce ->
+
+
+
+
+/*val stringRequest = StringRequest(Request.Method.GET, url, { responce ->
 
             val jsonObject = JSONObject(responce)
             val jsonArray = jsonObject.getJSONObject("data")
@@ -164,6 +137,3 @@ class MainActivity : AppCompatActivity() {
         recyclerView.layoutManager = LinearLayoutManager(this)
         recyclerView.setHasFixedSize(true)
         recyclerView.adapter = adapter*/
-
-    }
-}

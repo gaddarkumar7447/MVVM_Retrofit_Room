@@ -1,58 +1,31 @@
 package com.example.retrofitmvvm.mvvm
 
-import android.content.Context
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.retrofitmvvm.Utils.ApiResponce
+import com.example.retrofitmvvm.database.DatabaseDaoInterface
+import com.example.retrofitmvvm.database.DatabaseMemeAbstract
 import com.example.retrofitmvvm.meemmodel.Meme
-import com.example.retrofitmvvm.meemmodel.MemeX
-import kotlinx.coroutines.Dispatchers
+import com.example.retrofitmvvm.meemmodel.MemeData
+import com.example.retrofitmvvm.meemmodel.MemeResponce
 import kotlinx.coroutines.launch
 
-class ViewModelMeme(private val memesRepository : MemesRepository) : ViewModel() {
+class ViewModelMeme(private val memesRepository : MemesRepository, private val databaseMemeAbstract: DatabaseDaoInterface) : ViewModel() {
+    val memeLiveDataMeme: LiveData<ApiResponce<MemeResponce>> = memesRepository.memeLiveDataMeme
 
-    private val memeLiveData1 = MutableLiveData<List<MemeX>>()
-    val mutableLiveData : MutableLiveData<List<MemeX>> = memeLiveData1
-
-
-    init {
-        getData()
-    }
-
-
-    private fun getData(){
+    fun getMeme(){
         viewModelScope.launch {
-            //val result = memesRepository.getData()
-            memeLiveData1.postValue(memesRepository.getData())
+            memesRepository.getMeme()
         }
     }
 
-    /*fun getDataFromRetrofit() = viewModelScope.launch{
-        if (memesRepository.getDataFromRetrofit().getJokes().isSuccessful){
-            val result = memesRepository.getDataFromRetrofit().getJokes().body()
-            result?.data?.memes?.let { memesRepository.insertInDatabase(it) }
-            //memeLiveData.postValue(result)
-        }
-    }*/
+    var dataFromDataBaseMutable = MutableLiveData<List<Meme>>()
 
-    private fun internetConnection(): Boolean {
-        return true
-    }
-
-
-    //suspend fun insertDataInto(memeX: List<MemeX>) = memesRepository.insertInDatabase(memeX)
-
-    //fun getDataFromDatabase() = memesRepository.getAllDataFromDatabase()
-
-
-    /*init {
-        viewModelScope.launch(Dispatchers.IO) {
-            memesRepository.getMemes()
+    fun getDataBase(){
+        viewModelScope.launch {
+            dataFromDataBaseMutable.postValue(databaseMemeAbstract.getMemeFromDb())
         }
     }
-
-    val memes : LiveData<Meme>
-    get() = memesRepository.meme*/
-
 }
